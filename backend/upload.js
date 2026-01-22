@@ -4,9 +4,9 @@ const { Readable } = require('stream');
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: 'du7xm2eqi',
+    api_key: '316611551525272',
+    api_secret: 'K8nwReABUWlOYZpTU0fS0nfTqrw'
 });
 
 // Configure Multer (Memory Storage)
