@@ -32,6 +32,40 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 });
 
 // --- AUTH ROUTES ---
+app.post('/api/auth/signup', async (req, res) => {
+    const { phone, password, name, email } = req.body;
+    try {
+        // Check if user exists
+        const check = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+        if (check.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
+
+        // Insert new user
+        // TODO: Hash password with bcrypt before saving
+        const result = await db.query(
+            "INSERT INTO users (phone, password, name, email, role) VALUES ($1, $2, $3, $4, 'user') RETURNING *",
+            [phone, password, name, email]
+        );
+
+        const user = result.rows[0];
+
+        // MOCK JWT for now
+        res.status(201).json({
+            token: 'mock-jwt-token',
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                name: user.name,
+                profile_image_url: user.profile_image_url
+            }
+        });
+    } catch (err) {
+        console.error('Signup error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/auth/login', async (req, res) => {
     // Implement Login Logic (Phone or Email)
     // Check DB, return JWT
