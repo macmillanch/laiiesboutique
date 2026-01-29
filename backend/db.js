@@ -12,6 +12,23 @@ pool.on('connect', () => {
     console.log('Connected to the database');
 });
 
+const fs = require('fs');
+const path = require('path');
+
+const initDb = async () => {
+    try {
+        const schemaPath = path.join(__dirname, 'schema.sql');
+        if (fs.existsSync(schemaPath)) {
+            const schema = fs.readFileSync(schemaPath, 'utf8');
+            await pool.query(schema);
+            console.log('Database initialized successfully');
+        }
+    } catch (err) {
+        console.error('Database initialization error:', err);
+    }
+};
+
 module.exports = {
     query: (text, params) => pool.query(text, params),
+    initDb
 };
