@@ -21,6 +21,8 @@ const initDb = async () => {
         if (fs.existsSync(schemaPath)) {
             const schema = fs.readFileSync(schemaPath, 'utf8');
             await pool.query(schema);
+            // Patch existing table if needed
+            await pool.query('ALTER TABLE users ALTER COLUMN phone DROP NOT NULL').catch(() => { });
             console.log('Database initialized successfully');
         }
     } catch (err) {

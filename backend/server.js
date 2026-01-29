@@ -50,8 +50,8 @@ app.post('/api/auth/signup', async (req, res) => {
         return res.status(400).json({ error: 'Email or Phone is required' });
     }
 
-    let email = '';
-    let phone = '';
+    let email = null;
+    let phone = null;
 
     // Simple heuristic to distinguish email from phone
     if (loginId.includes('@')) {
@@ -62,7 +62,7 @@ app.post('/api/auth/signup', async (req, res) => {
 
     try {
         // Check if user exists by email or phone
-        const check = await db.query('SELECT * FROM users WHERE email = $1 OR (phone = $2 AND phone != \'\')', [email, phone]);
+        const check = await db.query('SELECT * FROM users WHERE (email IS NOT NULL AND email = $1) OR (phone IS NOT NULL AND phone = $2)', [email, phone]);
         if (check.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
 
         // Insert new user

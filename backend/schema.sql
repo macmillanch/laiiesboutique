@@ -1,7 +1,7 @@
 -- Create Users Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    phone VARCHAR(20) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE,
     name VARCHAR(100),
     email VARCHAR(100),
     profile_image_url TEXT,
