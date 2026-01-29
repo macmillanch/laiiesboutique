@@ -33,10 +33,27 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 
 // --- AUTH ROUTES ---
 app.post('/api/auth/signup', async (req, res) => {
-    const { phone, password, name, email } = req.body;
+    const { password, name, identifier } = req.body;
+    // identifier can be passed explicitly, or we check legacy fields
+    const loginId = identifier || req.body.phone || req.body.email;
+
+    if (!loginId) {
+        return res.status(400).json({ error: 'Email or Phone is required' });
+    }
+
+    let email = '';
+    let phone = '';
+
+    // Simple heuristic to distinguish email from phone
+    if (loginId.includes('@')) {
+        email = loginId;
+    } else {
+        phone = loginId;
+    }
+
     try {
-        // Check if user exists
-        const check = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+        // Check if user exists by email or phone
+        const check = await db.query('SELECT * FROM users WHERE email = $1 OR (phone = $2 AND phone != \'\')', [email, phone]);
         if (check.rows.length > 0) return res.status(400).json({ error: 'User already exists' });
 
         // Insert new user
@@ -68,10 +85,17 @@ app.post('/api/auth/signup', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
     // Implement Login Logic (Phone or Email)
-    // Check DB, return JWT
-    const { phone, password } = req.body;
+    const { password } = req.body;
+    const loginId = req.body.identifier || req.body.phone || req.body.email;
+
+    if (!loginId) {
+        return res.status(400).json({ error: 'Email or Phone is required' });
+    }
+
     try {
-        const result = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+        // Check DB for either phone or email
+        const result = await db.query('SELECT * FROM users WHERE phone = $1 OR email = $1', [loginId]);
+
         if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
 
         const user = result.rows[0];
@@ -92,6 +116,64 @@ app.post('/api/auth/login', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/google', async (req, res) => {
+    const { idToken, name, email, photoUrl, force_create } = req.body;
+
+    try {
+        // Check if user exists by email
+        const check = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+
+        let user;
+        if (check.rows.length > 0) {
+            user = check.rows[0];
+            // Optional: Update profile info if needed
+        } else {
+            // Create new user
+            const randomPwd = Math.random().toString(36).slice(-8);
+            // Note: Phone is empty for google signups initially, might need validation adjustment in DB
+            const result = await db.query(
+                "INSERT INTO users (email, name, profile_image_url, role, password, phone) VALUES ($1, $2, $3, 'user', $4, $5) RETURNING *",
+                [email, name, photoUrl, randomPwd, '']
+            );
+            user = result.rows[0];
+        }
+
+        res.json({
+            token: 'mock-jwt-token-google',
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                name: user.name,
+                profile_image_url: user.profile_image_url
+            }
+        });
+
+    } catch (err) {
+        console.error('Google Auth Error:', err);
+        // Fallback for dev environment without DB
+        if (err.code === 'ECONNREFUSED') {
+            console.warn('⚠️ Database unreachable. Falling back to MOCK login.');
+            res.json({
+                token: 'mock-jwt-token-google-fallback',
+                user: {
+                    id: 'mock-id-' + Date.now(),
+                    email: email,
+                    role: 'user',
+                    phone: '',
+                    name: name,
+                    profile_image_url: photoUrl
+                }
+            });
+            return;
+        }
+
+        console.error('SQL Error Detail:', err.detail);
+        res.status(500).json({ error: err.message, detail: err.detail });
     }
 });
 
