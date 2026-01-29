@@ -22,6 +22,15 @@ app.get('/api/db-init', async (req, res) => {
     }
 });
 
+app.get('/api/debug/users', async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, phone, email, name, role FROM users');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- UPLOAD ROUTE ---
 app.post('/api/upload', upload.single('image'), async (req, res) => {
     try {
