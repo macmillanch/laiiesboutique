@@ -27,7 +27,6 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   // We'll manage upload state locally if needed, but for now we just wait async
   bool _isUploading = false;
-  bool _isAdminLoading = false;
 
   Future<void> _pickAndUploadImage(User user) async {
     final picker = ImagePicker();
