@@ -34,8 +34,12 @@ app.get('/api/db-init', async (req, res) => {
 
 app.get('/api/debug/users', async (req, res) => {
     try {
-        const result = await db.query('SELECT id, phone, email, name, role FROM users');
-        res.json(result.rows);
+        const result = await db.query('SELECT id, phone, email, name, role FROM users ORDER BY id');
+        const users = result.rows.map(u => ({
+            ...u,
+            member_id: `RKJ${String(u.id).padStart(3, '0')}`
+        }));
+        res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
