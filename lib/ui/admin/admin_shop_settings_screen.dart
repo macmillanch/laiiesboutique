@@ -19,6 +19,8 @@ class _AdminShopSettingsScreenState extends State<AdminShopSettingsScreen> {
   final TextEditingController _boutiqueNameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _qrUrlCtrl = TextEditingController();
+  final TextEditingController _instagramCtrl = TextEditingController();
+  final TextEditingController _facebookCtrl = TextEditingController();
 
   bool _isLoading = true;
 
@@ -41,6 +43,8 @@ class _AdminShopSettingsScreenState extends State<AdminShopSettingsScreen> {
         _qrUrlCtrl.text =
             settings['qr_code_url'] ??
             'https://placehold.co/400x400/png?text=QR+Code';
+        _instagramCtrl.text = settings['shop_instagram'] ?? '';
+        _facebookCtrl.text = settings['shop_facebook'] ?? '';
         _isLoading = false;
       });
     } catch (e) {
@@ -88,6 +92,8 @@ class _AdminShopSettingsScreenState extends State<AdminShopSettingsScreen> {
     _boutiqueNameCtrl.dispose();
     _emailCtrl.dispose();
     _qrUrlCtrl.dispose();
+    _instagramCtrl.dispose();
+    _facebookCtrl.dispose();
     super.dispose();
   }
 
@@ -209,6 +215,18 @@ class _AdminShopSettingsScreenState extends State<AdminShopSettingsScreen> {
                   'admin@boutique.com',
                   _emailCtrl,
                 ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  'Instagram Handle',
+                  '@rkj_fashions',
+                  _instagramCtrl,
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  'Facebook URL',
+                  'https://facebook.com/rkjfashions',
+                  _facebookCtrl,
+                ),
                 const SizedBox(height: 24),
                 _buildActionButton(
                   'UPDATE PROFILE',
@@ -217,6 +235,8 @@ class _AdminShopSettingsScreenState extends State<AdminShopSettingsScreen> {
                     _updateSettings({
                       'shop_name': _boutiqueNameCtrl.text,
                       'shop_email': _emailCtrl.text,
+                      'shop_instagram': _instagramCtrl.text,
+                      'shop_facebook': _facebookCtrl.text,
                     });
                   },
                 ),

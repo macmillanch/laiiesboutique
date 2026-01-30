@@ -188,9 +188,16 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _launchUrl(String urlString) async {
+    if (urlString.isEmpty) return;
     final uri = Uri.parse(urlString);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback or error
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
     }
   }
 
@@ -215,6 +222,9 @@ class _ContactScreenState extends State<ContactScreen> {
         '123 Blossom Avenue, Suite 100\nNew York, NY 10012';
     final shopPhone = _settings['shop_phone'] ?? '+91 98765 43210';
     final shopEmail = _settings['shop_email'] ?? 'hello@boutique.com';
+    final shopInsta = _settings['shop_instagram'] ?? '@rkj_fashions';
+    final shopFacebook =
+        _settings['shop_facebook'] ?? 'https://facebook.com/rkjfashions';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundUser,
@@ -486,8 +496,24 @@ class _ContactScreenState extends State<ContactScreen> {
                   _buildFooterLink(
                     icon: Icons.camera_alt,
                     title: 'Instagram',
-                    subtitle: '@rkj_fashions',
-                    onTap: () {},
+                    subtitle: shopInsta,
+                    onTap: () {
+                      // Logic to open instagram url
+                      // If it's a handle, make it a link
+                      String url = shopInsta;
+                      if (!url.startsWith('http')) {
+                        url =
+                            'https://instagram.com/${url.replaceAll('@', '')}';
+                      }
+                      _launchUrl(url);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFooterLink(
+                    icon: Icons.facebook,
+                    title: 'Facebook',
+                    subtitle: 'Follow us',
+                    onTap: () => _launchUrl(shopFacebook),
                   ),
                   const SizedBox(height: 50),
                 ],
