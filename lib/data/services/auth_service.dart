@@ -95,7 +95,12 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<void> updateProfile({String? name, String? profileImageUrl}) async {
+  Future<void> updateProfile({
+    String? name,
+    String? profileImageUrl,
+    String? phone,
+    String? email,
+  }) async {
     if (_currentUser == null) return;
     _isLoading = true;
     notifyListeners();
@@ -104,7 +109,12 @@ class AuthService with ChangeNotifier {
       final response = await http.put(
         Uri.parse('$_baseUrl/users/${_currentUser!.id}'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': name, 'profile_image_url': profileImageUrl}),
+        body: jsonEncode({
+          'name': name,
+          'profile_image_url': profileImageUrl,
+          'phone': phone,
+          'email': email,
+        }),
       );
 
       if (response.statusCode == 200) {

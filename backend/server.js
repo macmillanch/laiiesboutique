@@ -19,7 +19,7 @@ app.get('/api/app-version', (req, res) => {
         version: "1.0.7",
         url: "https://ladies-boutique-backend.onrender.com/downloads/rkj-fashions.apk",
         forceUpdate: false,
-        releaseNotes: "RKJ Fashions Update Available!\n\nv1.0.7: Renamed to RKJ Fashions. Signup improvements (Success Dialog). UI Polish."
+        releaseNotes: "RKJ Fashions Update Available!\n\nv1.0.7: Address Saving Fixed! Renamed to RKJ Fashions. Signup improvements."
     });
 });
 
@@ -216,11 +216,11 @@ app.post('/api/auth/google', async (req, res) => {
 // --- USER ROUTES ---
 app.put('/api/users/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, profile_image_url } = req.body;
+    const { name, profile_image_url, phone, email } = req.body;
     try {
         const result = await db.query(
-            'UPDATE users SET name = COALESCE($1, name), profile_image_url = COALESCE($2, profile_image_url) WHERE id = $3 RETURNING *',
-            [name, profile_image_url, id]
+            'UPDATE users SET name = COALESCE($1, name), profile_image_url = COALESCE($2, profile_image_url), phone = COALESCE($3, phone), email = COALESCE($4, email) WHERE id = $5 RETURNING *',
+            [name, profile_image_url, phone, email, id]
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
 
@@ -260,15 +260,52 @@ app.delete('/api/wishlist/:userId/:productId', async (req, res) => {
     res.json({ message: 'Removed from wishlist' });
 });
 
-// --- ADDRESS ROUTES (Placeholder) ---
+// --- ADDRESS ROUTES ---
 app.get('/api/addresses/:userId', async (req, res) => {
-    res.json([]);
+    const { userId } = req.params;
+    try {
+        const result = await db.query('SELECT * FROM addresses WHERE user_id = $1 ORDER BY is_default DESC, created_at DESC', [userId]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
 app.post('/api/addresses', async (req, res) => {
-    res.status(201).json({ id: 'addr-' + Date.now(), ...req.body });
+    // EXTRACT AND MAP FRONTEND KEYS TO DB COLUMNS
+    const { userId, user_id, name, phone, address1, address2, street, city, state, zip, pincode, isDefault, is_default } = req.body;
+
+    // Robust fallback logic
+    const finalUserId = userId || user_id;
+    const finalStreet = street || (address1 ? `${address1}${address2 ? ', ' + address2 : ''}` : '');
+    const finalZip = zip || pincode;
+    const finalIsDefault = (isDefault !== undefined) ? isDefault : ((is_default !== undefined) ? is_default : false);
+
+    try {
+        if (!finalUserId) throw new Error("User ID is required");
+
+        if (finalIsDefault) {
+            await db.query('UPDATE addresses SET is_default = FALSE WHERE user_id = $1', [finalUserId]);
+        }
+        const result = await db.query(
+            'INSERT INTO addresses (user_id, name, phone, street, city, state, zip, is_default) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [finalUserId, name, phone, finalStreet, city, state, finalZip, finalIsDefault]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error("Address Save Error:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
+
 app.delete('/api/addresses/:userId/:addressId', async (req, res) => {
-    res.json({ message: 'Address deleted' });
+    const { userId, addressId } = req.params;
+    try {
+        await db.query('DELETE FROM addresses WHERE id = $1 AND user_id = $2', [addressId, userId]);
+        res.json({ message: 'Address deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- PRODUCT ROUTES ---

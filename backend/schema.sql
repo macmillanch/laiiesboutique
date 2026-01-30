@@ -58,6 +58,20 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create Addresses Table
+CREATE TABLE IF NOT EXISTS addresses (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    name VARCHAR(100),
+    phone VARCHAR(20),
+    street TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip VARCHAR(20),
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Seed Initial Admin (Password: password123)
 -- In production, passwords must be hashed. This is a placeholder insert.
 INSERT INTO users (phone, email, password, role) 
