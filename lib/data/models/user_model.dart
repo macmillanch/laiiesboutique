@@ -1,5 +1,6 @@
 class User {
   final String id;
+  String get displayId => 'RKJ${id.padLeft(3, '0')}';
   final String phone;
   final String? email;
   final String? name;

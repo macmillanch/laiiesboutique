@@ -169,7 +169,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         );
                       },
                       child: Text(
-                        'ID: ${user.id} (Tap to copy)',
+                        'ID: ${user.displayId} (Tap to copy)',
                         style: const TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 10,
@@ -222,53 +222,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => const ReferralScreen()),
                 ),
-              ),
-              _buildMenuItem(
-                context,
-                Icons.admin_panel_settings,
-                'Make Me Admin (Debug)',
-                _isAdminLoading
-                    ? () {}
-                    : () async {
-                        setState(() => _isAdminLoading = true);
-                        try {
-                          await context.read<AuthService>().makeMeAdmin();
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'You are now an Admin! Please restart the app or logout/login.',
-                                ),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Error'),
-                                content: Text('Failed to make you admin:\n$e'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        } finally {
-                          if (mounted) setState(() => _isAdminLoading = false);
-                        }
-                      },
-                trailing: _isAdminLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : null,
               ),
             ]),
 
