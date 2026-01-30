@@ -19,7 +19,7 @@ app.get('/api/app-version', (req, res) => {
         version: "1.0.7",
         url: "https://ladies-boutique-backend.onrender.com/downloads/rkj-fashions.apk",
         forceUpdate: false,
-        releaseNotes: "RKJ Fashions Update Available!\n\nv1.0.7: Address Saving Fixed! Renamed to RKJ Fashions. Signup improvements."
+        releaseNotes: "RKJ Fashions Update Available!\n\nv1.0.7: Address & Wishlist Saving Fixed! Renamed to RKJ Fashions."
     });
 });
 
@@ -249,15 +249,44 @@ app.post('/api/orders', async (req, res) => {
     res.status(201).json({ id: 'order-' + Date.now(), status: 'pending' });
 });
 
-// --- WISHLIST ROUTES (Placeholder) ---
+// --- WISHLIST ROUTES ---
 app.get('/api/wishlist/:userId', async (req, res) => {
-    res.json([]);
+    const { userId } = req.params;
+    try {
+        const result = await db.query(
+            `SELECT p.* FROM products p 
+             JOIN wishlist w ON p.id = w.product_id 
+             WHERE w.user_id = $1 
+             ORDER BY w.created_at DESC`,
+            [userId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
 app.post('/api/wishlist', async (req, res) => {
-    res.status(201).json({ message: 'Added to wishlist' });
+    const { userId, productId } = req.body;
+    try {
+        await db.query(
+            'INSERT INTO wishlist (user_id, product_id) VALUES ($1, $2) ON CONFLICT (user_id, product_id) DO NOTHING',
+            [userId, productId]
+        );
+        res.status(201).json({ message: 'Added to wishlist' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
 app.delete('/api/wishlist/:userId/:productId', async (req, res) => {
-    res.json({ message: 'Removed from wishlist' });
+    const { userId, productId } = req.params;
+    try {
+        await db.query('DELETE FROM wishlist WHERE user_id = $1 AND product_id = $2', [userId, productId]);
+        res.json({ message: 'Removed from wishlist' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // --- ADDRESS ROUTES ---
