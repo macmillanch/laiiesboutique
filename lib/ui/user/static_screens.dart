@@ -207,7 +207,7 @@ class _ContactScreenState extends State<ContactScreen> {
   }
 
   Future<void> _openMap() async {
-    const url = 'https://www.google.com/maps/search/?api=1&query=RKJ+Fashions';
+    const url = 'https://maps.app.goo.gl/c5GPZQvUA3sT86H38';
     await _launchUrl(url);
   }
 
